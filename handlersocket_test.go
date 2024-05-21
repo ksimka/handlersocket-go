@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 /*
-CREATE  TABLE `gotest`.`kvs` (
+CREATE  TABLE `hstest`.`kvs` (
   `id` VARCHAR(255) NOT NULL ,
   `content` VARCHAR(255) NULL ,
   PRIMARY KEY (`id`) )
@@ -26,197 +26,159 @@ ENGINE = InnoDB DEFAULT CHARSET=utf8;
 package handlersocket
 
 import (
-	"testing"
+	"context"
 	"strconv"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
+var addr = "udb1.d3"
 
 func TestOpenIndex(t *testing.T) {
-
 	// Create new instance
-	hs := New()
-	// Enable logging - which doesn't do much yet
-	hs.Logging = true
+	hs := New(context.Background())
 
 	// Connect to database
-	hs.Connect("127.0.0.1", 9998, 9999)
-	defer hs.Close()
+	err := hs.Connect(addr, 9998, 9999)
+	defer func() { _ = hs.Close }()
 
-	hs.OpenIndex(1, "gotest", "kvs", "PRIMARY", "id", "content")
+	require.NoError(t, err)
 
+	err = hs.OpenIndex(1, "hstest", "kvs", "PRIMARY", "id", "content")
+	require.NoError(t, err)
 }
 
 func TestDelete(t *testing.T) {
+	hs := New(context.Background())
 
-	hs := New()
-	// Enable logging
-	hs.Logging = true
 	// Connect to database
-	hs.Connect("127.0.0.1", 9998, 9999)
-	defer hs.Close()
+	err := hs.Connect(addr, 9998, 9999)
+	defer func() { _ = hs.Close }()
+
+	require.NoError(t, err)
+
 	// id is varchar(255), content is text
-	hs.OpenIndex(3, "gotest", "kvs", "PRIMARY", "id", "content")
+	err = hs.OpenIndex(3, "hstest", "kvs", "PRIMARY", "id", "content")
+	require.NoError(t, err)
 
 	var keys, newvals []string
 
-        keys = make([]string,1)
-	newvals = make([]string,0)
+	keys = make([]string, 1)
+	newvals = make([]string, 0)
 
-	for n:=1; n<10; n++ {
+	for n := 1; n < 10; n++ {
 		keys[0] = "blue" + strconv.Itoa(n)
 		_, err := hs.Modify(3, "=", 10, 0, "D", keys, newvals)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 	}
 }
 
 func TestWrite(t *testing.T) {
+	hs := New(context.Background())
 
-	hs := New()
-	// Enable logging
-	hs.Logging = true
 	// Connect to database
-	hs.Connect("127.0.0.1", 9998, 9999)
-	defer hs.Close()
+	err := hs.Connect(addr, 9998, 9999)
+	defer func() { _ = hs.Close }()
+	require.NoError(t, err)
+
 	// id is varchar(255), content is text
-	hs.OpenIndex(3, "gotest", "kvs", "PRIMARY", "id", "content")
+	err = hs.OpenIndex(3, "hstest", "kvs", "PRIMARY", "id", "content")
+	require.NoError(t, err)
 
-	err := hs.Insert(3, "blue1", "a quick brown fox jumped over a lazy dog")
-	if err != nil {
-		// We receive an error if the PK already exists.  This might not be a real "fail".
-		// To test for sure, change the PK above before testing.
-
-		//TODO: make a new PK each time.
-		t.Error(err)
-	}
+	err = hs.Insert(3, "blue1", "a quick brown fox jumped over a lazy dog")
+	require.NoError(t, err)
 	err = hs.Insert(3, "blue2", "a quick brown fox jumped over a lazy dog")
-	if err != nil {
-		// We receive an error if the PK already exists.  This might not be a real "fail".
-		// To test for sure, change the PK above before testing.
-
-		//TODO: make a new PK each time.
-		t.Error(err)
-	}
+	require.NoError(t, err)
 
 	// Chinese Data
 	err = hs.Insert(3, "chinese", "中文測試資料")
-	if err != nil {
-    t.Error(err)
-	}
+	require.NoError(t, err)
 
 }
 
 func TestModify(t *testing.T) {
+	hs := New(context.Background())
 
-	hs := New()
-	// Enable logging
-	hs.Logging = true
 	// Connect to database
-	hs.Connect("127.0.0.1", 9998, 9999)
-	defer hs.Close()
+	err := hs.Connect(addr, 9998, 9999)
+	defer func() { _ = hs.Close }()
+
+	require.NoError(t, err)
+
 	// id is varchar(255), content is text
-	hs.OpenIndex(3, "gotest", "kvs", "PRIMARY", "id", "content")
+	err = hs.OpenIndex(3, "hstest", "kvs", "PRIMARY", "id", "content")
+	require.NoError(t, err)
 
-	err := hs.Insert(3, "blue3", "a quick brown fox jumped over a lazy dog")
-	if err != nil {
-		// We receive an error if the PK already exists.  This might not be a real "fail".
-		// To test for sure, change the PK above before testing.
-
-		//TODO: make a new PK each time.
-		t.Error(err)
-	}
+	err = hs.Insert(3, "blue3", "a quick brown fox jumped over a lazy dog")
+	require.NoError(t, err)
 	err = hs.Insert(3, "blue4", "a quick brown fox jumped over a lazy dog")
-	if err != nil {
-		// We receive an error if the PK already exists.  This might not be a real "fail".
-		// To test for sure, change the PK above before testing.
-
-		//TODO: make a new PK each time.
-		t.Error(err)
-	}
-
-
+	require.NoError(t, err)
 
 	var keys, newvals []string
 
-	keys = make([]string,1)
-	newvals = make([]string,2)
+	keys = make([]string, 1)
+	newvals = make([]string, 2)
 
 	keys[0] = "blue3"
 	newvals[0] = "blue7"
 	newvals[1] = "some new thing"
 
 	_, err = hs.Modify(3, "=", 1, 0, "U", keys, newvals)
-	if err != nil {
-		t.Error(err)
-	}
-
-
+	require.NoError(t, err)
 
 	keys[0] = "blue4"
 	newvals[0] = "blue5"
 	newvals[1] = "My new value!"
 	_, err = hs.Modify(3, "=", 1, 0, "U", keys, newvals)
-	if err != nil {
-		t.Error(err)
-	}
-
+	require.NoError(t, err)
 
 }
 
-
 func TestRead(t *testing.T) {
+	hs := New(context.Background())
 
-	hs := New()
-	// Enable logging
-	hs.Logging = true
 	// Connect to database
-	hs.Connect("127.0.0.1", 9998, 9999)
-	defer hs.Close()
+	err := hs.Connect(addr, 9998, 9999)
+	defer func() { _ = hs.Close }()
 
-	hs.OpenIndex(1, "gotest", "kvs", "PRIMARY", "id", "content")
+	require.NoError(t, err)
 
-	found, _ := hs.Find(1, "=", 1, 0, "blue7")
+	err = hs.OpenIndex(1, "hstest", "kvs", "PRIMARY", "id", "content")
+	require.NoError(t, err)
 
+	found, err := hs.Find(1, "=", 1, 0, "blue7")
+	require.NoError(t, err)
+	require.Len(t, found, 1, "Expected one record for blue7")
 
-	if len(found) < 1 {
-		t.Error("Expected one record for blue7")
-	}
-
-  found, _ = hs.Find(1, "=", 1, 0, "chinese")
-
-  if len(found) < 1 {
-    t.Error("Expected one record for chinese")
-  }
-
-  if found[0].Data["content"] != "中文測試資料" {
-    t.Error("Expected one record content is 中文測試資料 but get", found[0].Data["content"])
-  }
-
-
+	found, err = hs.Find(1, "=", 1, 0, "chinese")
+	require.NoError(t, err)
+	require.Len(t, found, 1, "Expected one record for chinese")
+	require.Equal(t, "中文測試資料", found[0].Data["content"])
 }
 
 func BenchmarkOpenIndex(b *testing.B) {
 	b.StopTimer()
-	hs := New()
-	defer hs.Close()
-	hs.Connect("127.0.0.1", 9998, 9999)
+	hs := New(context.Background())
+	defer func() { _ = hs.Close }()
+
+	_ = hs.Connect(addr, 9998, 9999)
+
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		hs.OpenIndex(1, "gotest", "kvs", "PRIMARY", "id", "content")
-
+		_ = hs.OpenIndex(1, "hstest", "kvs", "PRIMARY", "id", "content")
 	}
 }
 func BenchmarkFind(b *testing.B) {
-
 	b.StopTimer()
-	hs := New()
-	defer hs.Close()
-	hs.Connect("127.0.0.1", 9998, 9999)
-	hs.OpenIndex(1, "gotest", "kvs", "PRIMARY", "id", "content")
-	b.StartTimer()
+	hs := New(context.Background())
+	defer func() { _ = hs.Close }()
 
+	_ = hs.Connect(addr, 9998, 9999)
+	_ = hs.OpenIndex(1, "hstest", "kvs", "PRIMARY", "id", "content")
+
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		hs.Find(1, "=", 1, 0, "brian")
+		_, _ = hs.Find(1, "=", 1, 0, "brian")
 	}
 }

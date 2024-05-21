@@ -1,6 +1,13 @@
 handlersocket-go
 ================
 
+## Changes in this fork
+- Removed all panics and replaced them with errors
+- Added context support
+- Removed channels and goroutines because it doesn't make any sense, after any request we need to wait for the response anyway
+- Fixed a couple of small bugs
+- Tests use testify now
+
 Go library for connecting to HandlerSocket Mysql plugin.  See github.com/ahiguti/HandlerSocket-Plugin-for-MySQL/
 
 
