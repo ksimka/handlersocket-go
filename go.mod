@@ -1,4 +1,4 @@
-module handlersocket-go
+module github.com/ksimka/handlersocket-go
 
 go 1.21.0
 

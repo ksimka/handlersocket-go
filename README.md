@@ -2,6 +2,7 @@ handlersocket-go
 ================
 
 ## Changes in this fork
+- Uses go.mod
 - Removed all panics and replaced them with errors
 - Added context support
 - Removed channels and goroutines because it doesn't make any sense, after any request we need to wait for the response anyway
